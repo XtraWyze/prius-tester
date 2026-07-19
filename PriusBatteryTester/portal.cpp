@@ -223,6 +223,11 @@ max-height:320px;
 </div>
 
 <div class="row">
+<span>SOH</span>
+<span class="value" id="soh">-</span>
+</div>
+
+<div class="row">
 <span>Capacity</span>
 <span class="value" id="resultCapacity">0 mAh</span>
 </div>
@@ -377,8 +382,6 @@ if(voltageHistory.length>120){
 
 drawGraph();
 
-if(data.running){
-
 let results = await fetch("/results");
 let r = await results.json();
 
@@ -387,6 +390,9 @@ if(r.completed){
 document.getElementById("resultsCard").style.display="block";
 
 document.getElementById("grade").innerHTML=r.grade;
+
+document.getElementById("soh").innerHTML=
+r.soh.toFixed(1)+" %";
 
 document.getElementById("resultCapacity").innerHTML=
 Math.round(r.capacity)+" mAh";
@@ -408,6 +414,8 @@ r.endVoltage.toFixed(2)+" V";
 document.getElementById("resultsCard").style.display="none";
 
 }
+
+if(data.running){
 
 document.getElementById("status").innerHTML="🟢 RUNNING";
 

@@ -15,6 +15,8 @@ struct TestResults {
 
     float averageCurrent;
 
+    float soh;
+
     unsigned long elapsedSeconds;
 
     bool completed;
@@ -24,3 +26,5 @@ struct TestResults {
 };
 
 extern TestResults results;
+
+void resetResults();

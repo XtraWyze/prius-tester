@@ -7,5 +7,8 @@ BatteryTest battery =
     0,
     0,
     0,
+    0,
+    0,
+    0,
     0
 };

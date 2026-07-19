@@ -29,6 +29,10 @@ private:
     float voltage;
     float current;
     float soc;
+    float discharged_mAh;
+    unsigned long lastDischargeTime;
+
+    void updateVoltageFromSOC();
 
 };
 

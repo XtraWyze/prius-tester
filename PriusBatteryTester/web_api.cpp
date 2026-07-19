@@ -7,9 +7,12 @@
 #include "logger.h"
 #include "web_api.h"
 #include "results.h"
+#include "test_control.h"
+
 extern WebServer server;
 extern FakeINA226 sensor;
 extern BatteryTest battery;
+
 void handleStatus() {
 
     String json = "{";
@@ -27,64 +30,30 @@ void handleStatus() {
     server.send(200, "application/json", json);
 
 }
-// ------------------------------------
-// Start Test
-// ------------------------------------
 
 void handleStart() {
 
-    battery.running = true;
-
-    battery.testStartTime = millis();
-
-    battery.lastCapacityTime = millis();
-
-    startLogging();
+    beginTest();
 
     server.send(200, "text/plain", "STARTED");
-    
-    results.completed = false;
 
-    results.startVoltage = sensor.readVoltage();
-
-    results.maxVoltage = results.startVoltage;
-
-    results.minVoltage = results.startVoltage;
 }
-
-// ------------------------------------
-// Stop Test
-// ------------------------------------
 
 void handleStop() {
 
-    battery.running = false;
+    finalizeTest();
 
     server.send(200, "text/plain", "STOPPED");
 
 }
 
-// ------------------------------------
-// Reset Test
-// ------------------------------------
-
 void handleReset() {
 
-    battery.running = false;
-
-    battery.capacity_mAh = 0;
-
-    battery.energy_Wh = 0;
-
-    sensor.begin();
+    resetTest();
 
     server.send(200, "text/plain", "RESET");
 
 }
-
-// ------------------------------------
-// Download CSV
-// ------------------------------------
 
 void handleDownload() {
 
@@ -109,10 +78,6 @@ void handleDownload() {
     file.close();
 }
 
-// ------------------------------------
-// Delete CSV
-// ------------------------------------
-
 void handleDelete() {
 
     if (LittleFS.exists("/battery_log.csv")) {
@@ -130,15 +95,18 @@ void handleResults()
 
     json += "\"completed\":" + String(results.completed ? "true" : "false");
     json += ",\"grade\":\"" + String(results.grade) + "\"";
-    json += ",\"capacity\":" + String(results.capacity_mAh,1);
-    json += ",\"energy\":" + String(results.energy_Wh,2);
-    json += ",\"startVoltage\":" + String(results.startVoltage,2);
-    json += ",\"endVoltage\":" + String(results.endVoltage,2);
-    json += ",\"minVoltage\":" + String(results.minVoltage,2);
-    json += ",\"maxVoltage\":" + String(results.maxVoltage,2);
+    json += ",\"soh\":" + String(results.soh, 1);
+    json += ",\"capacity\":" + String(results.capacity_mAh, 1);
+    json += ",\"energy\":" + String(results.energy_Wh, 2);
+    json += ",\"startVoltage\":" + String(results.startVoltage, 2);
+    json += ",\"endVoltage\":" + String(results.endVoltage, 2);
+    json += ",\"minVoltage\":" + String(results.minVoltage, 2);
+    json += ",\"maxVoltage\":" + String(results.maxVoltage, 2);
+    json += ",\"averageVoltage\":" + String(results.averageVoltage, 2);
+    json += ",\"averageCurrent\":" + String(results.averageCurrent, 2);
     json += ",\"time\":" + String(results.elapsedSeconds);
 
     json += "}";
 
-    server.send(200,"application/json",json);
+    server.send(200, "application/json", json);
 }

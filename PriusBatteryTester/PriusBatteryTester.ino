@@ -12,7 +12,7 @@
 #include "FakeINA226.h"
 #include "portal.h"
 #include "results.h"
-#include "grading.h"
+#include "test_control.h"
 
 // ------------------------------------------------------
 // Global Sensor
@@ -76,38 +76,20 @@ void loop() {
 
             calculateCapacity();
 
-            // ===== Update test results =====
             float v = sensor.readVoltage();
+            float c = sensor.readCurrent();
 
-            if (v > results.maxVoltage)
-                results.maxVoltage = v;
-
-            if (v < results.minVoltage)
-                results.minVoltage = v;
-
-            results.capacity_mAh = battery.capacity_mAh;
-            results.energy_Wh = battery.energy_Wh;
-            // ===============================
+            updateTestSamples(v, c);
 
             logData();
 
-            if (sensor.readVoltage() <= BATTERY_CUTOFF) {
+            if (checkCutoff(v)) {
 
-            battery.running = false;
+                finalizeTest();
 
-             results.endVoltage = sensor.readVoltage();
+                Serial.println("BATTERY CUTOFF");
 
-            results.elapsedSeconds =
-             (millis() - battery.testStartTime) / 1000;
-
-             results.completed = true;
-
-             results.grade =
-             calculateGrade(results.capacity_mAh);
-
-    Serial.println("BATTERY CUTOFF");
-
-}
+            }
 
         }
 
@@ -126,11 +108,7 @@ void handleButtons() {
 
     if (!digitalRead(START_BTN)) {
 
-        battery.running = true;
-
-        startLogging();
-
-        battery.lastCapacityTime = millis();
+        beginTest();
 
         Serial.println("TEST STARTED");
 
@@ -141,7 +119,7 @@ void handleButtons() {
 
     if (!digitalRead(STOP_BTN)) {
 
-        battery.running = false;
+        finalizeTest();
 
         Serial.println("TEST STOPPED");
 
@@ -154,13 +132,7 @@ void handleButtons() {
 
     if (!digitalRead(RESET_BTN)) {
 
-        battery.running = false;
-
-        battery.capacity_mAh = 0;
-
-        battery.energy_Wh = 0;
-
-        sensor.begin();
+        resetTest();
 
         Serial.println("RESET");
 

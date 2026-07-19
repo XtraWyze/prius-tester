@@ -14,6 +14,12 @@ struct BatteryTest {
 
     unsigned long testStartTime;
 
+    float voltageSum;
+
+    float currentSum;
+
+    unsigned long sampleCount;
+
 };
 
 extern BatteryTest battery;

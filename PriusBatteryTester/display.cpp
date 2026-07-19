@@ -11,6 +11,7 @@
 #include "config.h"
 #include "display.h"
 #include "battery.h"
+#include "results.h"
 #include "FakeINA226.h"
 
 // These are defined in PriusBatteryTester.ino
@@ -88,6 +89,14 @@ void updateDisplay() {
     display.print(" SOC:");
     display.print(soc, 0);
     display.println("%");
+
+    if (results.completed) {
+        display.print("Grade: ");
+        display.print(results.grade);
+        display.print("  SOH:");
+        display.print(results.soh, 0);
+        display.println("%");
+    }
 
     display.display();
 
