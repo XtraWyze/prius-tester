@@ -3,6 +3,8 @@
 // Simulated INA226 for Prius Battery Tester
 // ======================================================
 
+#include <Arduino.h>
+
 #include "FakeINA226.h"
 #include "config.h"
 
