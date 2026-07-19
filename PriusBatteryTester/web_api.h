@@ -7,3 +7,4 @@ void handleReset();
 void handleDownload();
 void handleDelete();
 void handleResults();
+void handleDownloadSummary();

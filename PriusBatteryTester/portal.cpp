@@ -145,6 +145,63 @@ background:#991b1b;
 color:white;
 }
 
+.copy{
+background:#7c3aed;
+color:white;
+}
+
+.save-json{
+background:#9333ea;
+color:white;
+}
+
+.summary-card{
+border:2px solid #333;
+}
+
+.summary-title{
+color:#00ff66;
+font-size:28px;
+margin:0 0 10px;
+}
+
+.summary-timestamp{
+font-size:14px;
+color:#888;
+margin-bottom:10px;
+}
+
+.grade-display{
+font-size:72px;
+font-weight:bold;
+margin:10px 0 20px;
+line-height:1;
+}
+
+.grade-A{
+color:#16a34a;
+}
+
+.grade-B{
+color:#86efac;
+}
+
+.grade-C{
+color:#facc15;
+}
+
+.grade-D{
+color:#fb923c;
+}
+
+.grade-F{
+color:#ef4444;
+}
+
+.summary-actions{
+margin-top:10px;
+}
+
 footer{
 
 margin-top:30px;
@@ -213,43 +270,69 @@ max-height:320px;
 
 </div>
 
-<div class="card" id="resultsCard" style="display:none;">
+<div class="card summary-card" id="summaryCard" style="display:none;">
 
-<h2>✔ Test Complete</h2>
+<h2 class="summary-title">✓ TEST COMPLETE</h2>
 
-<div class="row">
-<span>Grade</span>
-<span class="value" id="grade">-</span>
-</div>
+<div class="summary-timestamp" id="summaryTimestamp"></div>
 
-<div class="row">
-<span>SOH</span>
-<span class="value" id="soh">-</span>
-</div>
+<div class="grade-display" id="gradeDisplay">-</div>
 
 <div class="row">
 <span>Capacity</span>
-<span class="value" id="resultCapacity">0 mAh</span>
+<span class="value" id="summaryCapacity">0 mAh</span>
 </div>
 
 <div class="row">
 <span>Energy</span>
-<span class="value" id="resultEnergy">0 Wh</span>
+<span class="value" id="summaryEnergy">0 Wh</span>
 </div>
 
 <div class="row">
-<span>Time</span>
-<span class="value" id="resultTime">0 s</span>
+<span>Elapsed Time</span>
+<span class="value" id="summaryTime">0 s</span>
 </div>
 
 <div class="row">
 <span>Start Voltage</span>
-<span class="value" id="startVoltage">0 V</span>
+<span class="value" id="summaryStartVoltage">0 V</span>
 </div>
 
 <div class="row">
 <span>End Voltage</span>
-<span class="value" id="endVoltage">0 V</span>
+<span class="value" id="summaryEndVoltage">0 V</span>
+</div>
+
+<div class="row">
+<span>Minimum Voltage</span>
+<span class="value" id="summaryMinVoltage">0 V</span>
+</div>
+
+<div class="row">
+<span>Maximum Voltage</span>
+<span class="value" id="summaryMaxVoltage">0 V</span>
+</div>
+
+<div class="row">
+<span>Average Voltage</span>
+<span class="value" id="summaryAvgVoltage">0 V</span>
+</div>
+
+<div class="row">
+<span>Average Current</span>
+<span class="value" id="summaryAvgCurrent">0 A</span>
+</div>
+
+<div class="summary-actions">
+
+<button class="copy" onclick="copyResults()">
+📋 Copy Results
+</button>
+
+<button class="save-json" onclick="saveJson()">
+💾 Save JSON
+</button>
+
 </div>
 
 </div>
@@ -290,6 +373,136 @@ graph.width = 700;
 graph.height = 250;
 
 const voltageHistory = [];
+let lastSummary = null;
+
+function formatElapsed(seconds){
+
+const h=Math.floor(seconds/3600);
+const m=Math.floor((seconds%3600)/60);
+
+if(h>0){
+return h+"h "+m+"m";
+}
+
+if(m>0){
+return m+"m "+(seconds%60)+"s";
+}
+
+return seconds+"s";
+
+}
+
+function gradeClass(grade){
+
+if(grade==="A") return "grade-A";
+if(grade==="B") return "grade-B";
+if(grade==="C") return "grade-C";
+if(grade==="D") return "grade-D";
+if(grade==="F") return "grade-F";
+
+return "";
+
+}
+
+function updateSummaryCard(r){
+
+lastSummary=r;
+
+document.getElementById("summaryCard").style.display="block";
+
+document.getElementById("summaryTimestamp").innerHTML=
+"Completed: "+r.timestamp;
+
+const gradeEl=document.getElementById("gradeDisplay");
+
+gradeEl.innerHTML=r.grade;
+gradeEl.className="grade-display "+gradeClass(r.grade);
+
+document.getElementById("summaryCapacity").innerHTML=
+Math.round(r.capacity_mAh)+" mAh";
+
+document.getElementById("summaryEnergy").innerHTML=
+r.energy_Wh.toFixed(2)+" Wh";
+
+document.getElementById("summaryTime").innerHTML=
+formatElapsed(r.elapsedSeconds);
+
+document.getElementById("summaryStartVoltage").innerHTML=
+r.startVoltage.toFixed(2)+" V";
+
+document.getElementById("summaryEndVoltage").innerHTML=
+r.endVoltage.toFixed(2)+" V";
+
+document.getElementById("summaryMinVoltage").innerHTML=
+r.minVoltage.toFixed(2)+" V";
+
+document.getElementById("summaryMaxVoltage").innerHTML=
+r.maxVoltage.toFixed(2)+" V";
+
+document.getElementById("summaryAvgVoltage").innerHTML=
+r.averageVoltage.toFixed(2)+" V";
+
+document.getElementById("summaryAvgCurrent").innerHTML=
+r.averageCurrent.toFixed(2)+" A";
+
+}
+
+function formatReport(r){
+
+return [
+"------------------------------------",
+"Prius Battery Analyzer",
+"------------------------------------",
+"Grade: "+r.grade,
+"Capacity: "+Math.round(r.capacity_mAh)+" mAh",
+"Energy: "+r.energy_Wh.toFixed(1)+" Wh",
+"Time: "+formatElapsed(r.elapsedSeconds),
+"Start Voltage: "+r.startVoltage.toFixed(2)+"V",
+"End Voltage: "+r.endVoltage.toFixed(2)+"V",
+"Min Voltage: "+r.minVoltage.toFixed(2)+"V",
+"Max Voltage: "+r.maxVoltage.toFixed(2)+"V",
+"Average Voltage: "+r.averageVoltage.toFixed(2)+"V",
+"Average Current: "+r.averageCurrent.toFixed(2)+"A",
+"Timestamp: "+r.timestamp,
+"------------------------------------"
+].join("\n");
+
+}
+
+async function copyResults(){
+
+if(!lastSummary){
+alert("No test summary available.");
+return;
+}
+
+const text=formatReport(lastSummary);
+
+try{
+
+await navigator.clipboard.writeText(text);
+alert("Results copied to clipboard.");
+
+}
+catch(e){
+
+const area=document.createElement("textarea");
+area.value=text;
+document.body.appendChild(area);
+area.select();
+document.execCommand("copy");
+document.body.removeChild(area);
+alert("Results copied to clipboard.");
+
+}
+
+}
+
+function saveJson(){
+
+window.location="/summary.json";
+
+}
 
 function drawGraph(){
 
@@ -387,31 +600,12 @@ let r = await results.json();
 
 if(r.completed){
 
-document.getElementById("resultsCard").style.display="block";
-
-document.getElementById("grade").innerHTML=r.grade;
-
-document.getElementById("soh").innerHTML=
-r.soh.toFixed(1)+" %";
-
-document.getElementById("resultCapacity").innerHTML=
-Math.round(r.capacity)+" mAh";
-
-document.getElementById("resultEnergy").innerHTML=
-r.energy.toFixed(2)+" Wh";
-
-document.getElementById("resultTime").innerHTML=
-r.time+" s";
-
-document.getElementById("startVoltage").innerHTML=
-r.startVoltage.toFixed(2)+" V";
-
-document.getElementById("endVoltage").innerHTML=
-r.endVoltage.toFixed(2)+" V";
+updateSummaryCard(r);
 
 }else{
 
-document.getElementById("resultsCard").style.display="none";
+document.getElementById("summaryCard").style.display="none";
+lastSummary=null;
 
 }
 
@@ -440,7 +634,8 @@ document.getElementById("status").innerHTML =
 
 async function startTest(){
 
-document.getElementById("resultsCard").style.display="none";
+document.getElementById("summaryCard").style.display="none";
+lastSummary=null;
 
 await fetch("/start");
 
@@ -520,6 +715,7 @@ server.on("/reset", handleReset);
 server.on("/download", handleDownload);
 server.on("/delete", handleDelete);
 server.on("/results", handleResults);
+server.on("/summary.json", handleDownloadSummary);
 server.begin();
 
 Serial.println("Server Started");

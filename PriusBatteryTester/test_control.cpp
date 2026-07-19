@@ -7,6 +7,7 @@
 #include "grading.h"
 #include "logger.h"
 #include "FakeINA226.h"
+#include "test_summary.h"
 
 extern FakeINA226 sensor;
 
@@ -57,6 +58,9 @@ void finalizeTest()
     results.soh = calculateSOH(results.capacity_mAh);
     results.grade = calculateGrade(results.capacity_mAh);
     results.completed = true;
+
+    setResultsTimestamp();
+    saveTestSummary();
 }
 
 void resetTest()

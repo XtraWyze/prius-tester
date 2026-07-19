@@ -8,6 +8,7 @@
 #include "web_api.h"
 #include "results.h"
 #include "test_control.h"
+#include "test_summary.h"
 
 extern WebServer server;
 extern FakeINA226 sensor;
@@ -91,22 +92,36 @@ void handleDelete() {
 
 void handleResults()
 {
-    String json = "{";
+    server.send(200, "application/json", buildTestSummaryJson());
+}
 
-    json += "\"completed\":" + String(results.completed ? "true" : "false");
-    json += ",\"grade\":\"" + String(results.grade) + "\"";
-    json += ",\"soh\":" + String(results.soh, 1);
-    json += ",\"capacity\":" + String(results.capacity_mAh, 1);
-    json += ",\"energy\":" + String(results.energy_Wh, 2);
-    json += ",\"startVoltage\":" + String(results.startVoltage, 2);
-    json += ",\"endVoltage\":" + String(results.endVoltage, 2);
-    json += ",\"minVoltage\":" + String(results.minVoltage, 2);
-    json += ",\"maxVoltage\":" + String(results.maxVoltage, 2);
-    json += ",\"averageVoltage\":" + String(results.averageVoltage, 2);
-    json += ",\"averageCurrent\":" + String(results.averageCurrent, 2);
-    json += ",\"time\":" + String(results.elapsedSeconds);
+void handleDownloadSummary()
+{
+    if (results.completed) {
+        server.sendHeader(
+            "Content-Disposition",
+            "attachment; filename=test_summary.json");
+        server.send(200, "application/json", buildTestSummaryJson());
+        return;
+    }
 
-    json += "}";
+    if (!LittleFS.exists("/test_summary.json")) {
+        server.send(404, "text/plain", "No test summary found.");
+        return;
+    }
 
-    server.send(200, "application/json", json);
+    File file = LittleFS.open("/test_summary.json", "r");
+
+    if (!file) {
+        server.send(500, "text/plain", "Unable to open summary.");
+        return;
+    }
+
+    server.sendHeader(
+        "Content-Disposition",
+        "attachment; filename=test_summary.json");
+
+    server.streamFile(file, "application/json");
+
+    file.close();
 }

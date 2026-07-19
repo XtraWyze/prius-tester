@@ -19,6 +19,8 @@ struct TestResults {
 
     unsigned long elapsedSeconds;
 
+    char timestamp[32];
+
     bool completed;
 
     char grade;
